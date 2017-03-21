@@ -133,7 +133,7 @@ def odnoklassniki_oauth_sig(data, client_secret):
     ).hexdigest()
     check_list = sorted(['{0:s}={1:s}'.format(key, value)
                             for key, value in data.items()
-                                if key != 'access_token'])
+                                if key != 'access_token' and value])
     return md5((''.join(check_list) + suffix).encode('utf-8')).hexdigest()
 
 
