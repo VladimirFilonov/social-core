@@ -187,7 +187,9 @@ def partial_pipeline_data(backend, user=None, partial_token=None,
                 id_from_partial = partial.kwargs.get('uid')
                 id_from_request = request_data.get(backend.ID_KEY)
 
-                if id_from_partial != id_from_request:
+                # uid in database and query string could have different 
+                # type so it's better to compare string representation
+                if str(id_from_partial) != str(id_from_request):
                     partial_matches_request = False
 
         if partial_matches_request:
