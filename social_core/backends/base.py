@@ -184,6 +184,7 @@ class BaseAuth(object):
 
     def continue_pipeline(self, partial):
         """Continue previous halted pipeline"""
+        self.strategy.clean_partial_pipeline(partial.token)
         return self.strategy.authenticate(self,
                                           pipeline_index=partial.next_step,
                                           *partial.args,
