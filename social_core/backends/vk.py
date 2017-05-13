@@ -114,6 +114,9 @@ class VKOAuth2(BaseOAuth2):
             if error.get('error_code') == 5:
                 raise AuthTokenRevoked(self, msg)
             else:
+            if error.get('error_code') == 17:
+                return self.strategy.redirect(error.get("redirect_uri"))
+            else:
                 raise AuthException(self, msg)
 
         if data:
