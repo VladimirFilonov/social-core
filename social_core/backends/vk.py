@@ -113,8 +113,6 @@ class VKOAuth2(BaseOAuth2):
             msg = error.get('error_msg', 'Unknown error')
             if error.get('error_code') == 5:
                 raise AuthTokenRevoked(self, msg)
-            elif error.get('error_code') == 17:
-                return self.strategy.redirect(error.get("redirect_uri"))
             else:
                 raise AuthException(self, msg)
 
