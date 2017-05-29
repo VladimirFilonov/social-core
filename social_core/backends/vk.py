@@ -209,6 +209,11 @@ def vk_api(backend, method, data):
         url = 'https://api.vk.com/method/' + method
 
     try:
+        if "message" in data:
+            body = {
+                "message": data.pop("message")
+            }
+            return backend.get_json(url, method="POST", params=data, data=body)
         return backend.get_json(url, params=data)
     except (TypeError, KeyError, IOError, ValueError, IndexError):
         return None
