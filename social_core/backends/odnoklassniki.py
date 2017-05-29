@@ -169,4 +169,4 @@ def odnoklassniki_api(backend, data, api_url, public_key, client_secret,
     else:
         msg = 'Unknown request type {0}. How should it be signed?'
         raise AuthFailed(backend, msg.format(request_type))
-    return backend.get_json(api_url + 'fb.do', params=data)
+    return backend.get_json(api_url + 'fb.do', method="POST", data=data)
