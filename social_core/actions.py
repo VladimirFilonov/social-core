@@ -13,17 +13,17 @@ def do_auth(backend, redirect_name='next'):
         if field_name in data:
             backend.strategy.session_set(field_name, data[field_name])
 
-    if redirect_name in data:
-        # Check and sanitize a user-defined GET/POST next field value
-        redirect_uri = data[redirect_name]
-        if backend.setting('SANITIZE_REDIRECTS', True):
-            allowed_hosts = backend.setting('ALLOWED_REDIRECT_HOSTS', []) + \
-                            [backend.strategy.request_host()]
-            redirect_uri = sanitize_redirect(allowed_hosts, redirect_uri)
-        backend.strategy.session_set(
-            redirect_name,
-            redirect_uri or backend.setting('LOGIN_REDIRECT_URL')
-        )
+    redirect_uri = data.get(redirect_name, backend.setting('LOGIN_REDIRECT_URL'))
+    # Check and sanitize a user-defined GET/POST next field value
+    if backend.setting('SANITIZE_REDIRECTS', True):
+        allowed_hosts = backend.setting('ALLOWED_REDIRECT_HOSTS', []) + \
+                        [backend.strategy.request_host()]
+        redirect_uri = sanitize_redirect(allowed_hosts, redirect_uri)
+
+    backend.strategy.session_set(
+        redirect_name,
+        redirect_uri or backend.setting('LOGIN_REDIRECT_URL')
+    )
     return backend.start()
 
 
