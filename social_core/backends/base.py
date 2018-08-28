@@ -13,6 +13,7 @@ class BaseAuth(object):
     supports_inactive_user = False  # Django auth
     ID_KEY = None
     EXTRA_DATA = None
+    GET_ALL_EXTRA_DATA = False
     REQUIRES_EMAIL_VALIDATION = False
     SEND_USER_AGENT = False
     SSL_PROTOCOL = None
@@ -70,8 +71,8 @@ class BaseAuth(object):
            'strategy' not in kwargs or 'response' not in kwargs:
             return None
 
-        self.strategy = self.strategy or kwargs.get('strategy')
-        self.redirect_uri = self.redirect_uri or kwargs.get('redirect_uri')
+        self.strategy = kwargs.get('strategy') or self.strategy
+        self.redirect_uri = kwargs.get('redirect_uri') or self.redirect_uri
         self.data = self.strategy.request_data()
         kwargs.setdefault('is_new', False)
         pipeline = self.strategy.get_pipeline(self)
@@ -101,6 +102,11 @@ class BaseAuth(object):
         out.setdefault('request', self.strategy.request_data())
         out.setdefault('details', {})
 
+        if not isinstance(pipeline_index, int) or \
+           pipeline_index < 0 or \
+           pipeline_index >= len(pipeline):
+            pipeline_index = 0
+
         for idx, name in enumerate(pipeline[pipeline_index:]):
             out['pipeline_index'] = pipeline_index + idx
             func = module_member(name)
@@ -116,7 +122,12 @@ class BaseAuth(object):
             # store the last time authentication toke place
             'auth_time': int(time.time())
         }
-        for entry in (self.EXTRA_DATA or []) + self.setting('EXTRA_DATA', []):
+        extra_data_entries = []
+        if self.GET_ALL_EXTRA_DATA or self.setting('GET_ALL_EXTRA_DATA', False):
+            extra_data_entries = response.keys()
+        else:
+            extra_data_entries = (self.EXTRA_DATA or []) + self.setting('EXTRA_DATA', [])
+        for entry in extra_data_entries:
             if not isinstance(entry, (list, tuple)):
                 entry = (entry,)
             size = len(entry)
@@ -128,7 +139,7 @@ class BaseAuth(object):
                 elif size == 1:
                     name = alias = entry[0]
                     discard = False
-                value = response.get(name) or details.get(name)
+                value = response.get(name) or details.get(name) or details.get(alias)
                 if discard and not value:
                     continue
                 data[alias] = value

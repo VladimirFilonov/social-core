@@ -14,12 +14,13 @@ from ..exceptions import AuthException, AuthCanceled, AuthUnknownError, \
                          AuthMissingParameter
 
 
-API_VERSION = 2.8
+API_VERSION = 2.9
 
 
 class FacebookOAuth2(BaseOAuth2):
     """Facebook OAuth2 authentication backend"""
     name = 'facebook'
+    REDIRECT_STATE = False
     RESPONSE_TYPE = None
     SCOPE_SEPARATOR = ','
     AUTHORIZATION_URL = 'https://www.facebook.com/v{version}/dialog/oauth'
@@ -172,7 +173,7 @@ class FacebookAppOAuth2(FacebookOAuth2):
         return False
 
     def auth_complete(self, *args, **kwargs):
-        access_token = None
+        access_token = self.data.get('access_token')
         response = {}
 
         if 'signed_request' in self.data:

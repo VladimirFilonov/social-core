@@ -8,8 +8,107 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/python-social-auth/social-core/commits/master)
 
 ### Added
+- Telegram authentication backend
+- Keycloak backend is added with preliminary OAuth2 support
+- Globus OpenId Connect backend
+- Discord OAuth2 backend
+
+### Changed
+- GitHub backend now uses `state` parameter instead of `redirect_state`
+- Correct setting name on AzureAD Tenant backend
+- Introduce access token expired threshold of 5 seconds by default
+- Delete partial token from session if still present
+- Use `userPrincipalName` to set `username` and `email` accordingly
+- Send authorization headers to Kakao OAuth2, properly fill user details
+- LINE API update to v2.1
+- Use `unitest2` with Python 3
+- Update Slack backend to use computed usename on teams setups
+- Enforce `unicode_literals` on Slack backend
+- Update ORCID backend to support Member API
+- Updated Pixelpin backend to use the new OpenId Connect service
+- Update `sanitize_redirect` to invalidate redirects like `///evil.com`
+- Update Coinbase API endpoint
+- Dropped Python 3.3 support
+
+## [1.7.0](https://github.com/python-social-auth/social-core/releases/tag/1.7.0) - 2018-02-20
+
+### Changed
+- Update EvenOnline token expiration key
+- Update OpenStreetMap URL to `https`
+- Fix LinkedIn backend to send the oauth_token as `Authorization` header
+- Fixed `extra_data` update to use the `alias` as key too
+- Make `signed_request` optional in Facebook App OAuth2 backend
+- Support string and lists on SAML permanent id value
+- Correct sending `params` sending on `GET` access-token retrieval case
+- Ensure b2c policy name check
+- Use `extras_requrie` to specify python specific version dependencies
+
+### Added
+- Added support for AzureAD B2C OAuth2
+- Added LinkedIn Mobile OAuth2 backend
+
+## [1.6.0](https://github.com/python-social-auth/social-core/releases/tag/1.6.0) - 2017-12-22
+
+### Changed
+- Fix coinbase backend to use api v2
+- Default `REDIRECT_STATE` to `False` in `FacebookOAuth2` backend.
+- Add revoke token url for Coinbase OAuth2 backend
+- Fix LinkedIn backend to send `oauth_token` as request header
+- Make partial step decorator handle arguments
+
+### Added
+- Added support for ChatWork OAuth2 backend
+
+## [1.5.0](https://github.com/python-social-auth/social-core/releases/tag/1.5.0) - 2017-10-28
+
+### Changed
+- Fix using the entire SAML2 nameid string
+- Prevent timing attacks against state token
+- Updated GitLab API version to v4
+- Enforce UTC when calculating access token expiration time
+- Cleanup user attributes update from social details
+- Send authorization header on Reddit auth
+
+### Added
+- Added support for tenant for Azure AD backend
+- Added JWT validation for Azure AD backend
+- Added support for Bungie.net OAuth2 backend
+- Added support for Eventbrite OAuth2 backend
+- Added support for OpenShift OAuth2 backend
+- Added support for Microsoft Graph OAuth2 backend
+
+## [1.4.0](https://github.com/python-social-auth/social-core/releases/tag/1.4.0) - 2017-06-09
+
+### Changed
+- Fix path in import BaseOAuth2 for Monzo
+- Fix auth header formatting problem for Fitbit OAuth2
+- Raise AuthForbidden when provider returns 401.
+- Update Facebook API to version 2.9
+- Speed up authorization process for VKAppOAuth2
+- Apply same sanitization as on connect to disconnect.
+- Disable `redirect_state` usage on Disqus backend
+
+### Added
+- Added Udata OAuth2 backend
+- Added ORCID backend
+- Added feature to get all extra data from backend through `GET_ALL_EXTRA_DATA` boolean flag.
+- Added Patreon provider
+
+## [1.3.0](https://github.com/python-social-auth/social-core/releases/tag/1.3.0) - 2017-05-06
+
+### Added
 - Use extra_data method when refreshing an `access_token`, ensure that
   auth-time is updated then
+- Added 500px OAuth1 backend
+- Added Monzo OAuth2 backend
+- Added `get_access_token` method that will refresh if expired
+
+### Changed
+- Updated email validation to pass the partial pipeline token if given.
+- Prefer passed parameters in `authenticate` method
+- Properly discard already used verification codes
+- Save SAML attributes in `extra_data`
+- Note `id_token` in GooglePlusAuth's AuthMissingParameter
 
 ## [1.2.0](https://github.com/python-social-auth/social-core/releases/tag/1.2.0) - 2017-02-10
 

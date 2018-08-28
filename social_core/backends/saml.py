@@ -42,9 +42,10 @@ class SAMLIdentityProvider(object):
         If you want to use the NameID, it's available via
         attributes['name_id']
         """
-        return attributes[
-            self.conf.get('attr_user_permanent_id', OID_USERID)
-        ][0]
+        uid = attributes[self.conf.get('attr_user_permanent_id', OID_USERID)]
+        if isinstance(uid, list):
+            uid = uid[0]
+        return uid
 
     # Attributes processing:
     def get_user_details(self, attributes):
@@ -73,7 +74,10 @@ class SAMLIdentityProvider(object):
         another attribute to use.
         """
         key = self.conf.get(conf_key, default_attribute)
-        return attributes[key][0] if key in attributes else None
+        value = attributes[key] if key in attributes else None
+        if isinstance(value, list):
+            value = value[0]
+        return value
 
     @property
     def entity_id(self):
@@ -169,6 +173,7 @@ class SAMLAuth(BaseAuth):
     SOCIAL_AUTH_SAML_SECURITY_CONFIG = {}
     """
     name = "saml"
+    EXTRA_DATA = []
 
     def get_idp(self, idp_name):
         """Given the name of an IdP, get a SAMLIdentityProvider instance"""
@@ -308,6 +313,12 @@ class SAMLAuth(BaseAuth):
         }
         kwargs.update({'response': response, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
+
+    def extra_data(self, user, uid, response, details=None, *args, **kwargs):
+        return super(SAMLAuth, self).extra_data(user, uid,
+                                                response['attributes'],
+                                                details=details,
+                                                *args, **kwargs)
 
     def _check_entitlements(self, idp, attributes):
         """

@@ -20,6 +20,9 @@ NO_SPECIAL_REGEX = re.compile(r'[^\w.@+_-]+', re.UNICODE)
 
 
 class UserMixin(object):
+    # Consider tokens that expire in 5 seconds as already expired
+    ACCESS_TOKEN_EXPIRED_THRESHOLD = 5
+
     user = ''
     provider = ''
     uid = None
@@ -79,14 +82,14 @@ class UserMixin(object):
             # Detect if expires is a timestamp
             if expires > time.mktime(now.timetuple()):
                 # expires is a datetime, return the remaining difference
-                return datetime.fromtimestamp(expires) - now
+                return datetime.utcfromtimestamp(expires) - now
             else:
                 # expires is the time to live seconds since creation,
                 # check against auth_time if present, otherwise return
                 # the value
                 auth_time = self.extra_data.get('auth_time')
                 if auth_time:
-                    reference = datetime.fromtimestamp(auth_time)
+                    reference = datetime.utcfromtimestamp(auth_time)
                     return (reference + timedelta(seconds=expires)) - now
                 else:
                     return timedelta(seconds=expires)
@@ -96,8 +99,16 @@ class UserMixin(object):
         return self.expiration_timedelta()
 
     def access_token_expired(self):
+        """Return true / false if access token is already expired"""
         expiration = self.expiration_timedelta()
-        return expiration and expiration.total_seconds() <= 0
+        return expiration and \
+            expiration.total_seconds() <= self.ACCESS_TOKEN_EXPIRED_THRESHOLD
+
+    def get_access_token(self, strategy):
+        """Returns a valid access token."""
+        if self.access_token_expired():
+            self.refresh_token(strategy)
+        return self.access_token
 
     def set_extra_data(self, extra_data=None):
         if extra_data and self.extra_data != extra_data:

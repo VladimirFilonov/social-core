@@ -2,7 +2,7 @@ import time
 import random
 import hashlib
 
-from .utils import setting_name, module_member
+from .utils import setting_name, module_member, PARTIAL_TOKEN_SESSION_NAME
 from .store import OpenIdStore, OpenIdSessionWrapper
 from .pipeline import DEFAULT_AUTH_PIPELINE, DEFAULT_DISCONNECT_PIPELINE
 from .pipeline.utils import partial_load, partial_store, partial_prepare
@@ -92,6 +92,7 @@ class BaseStrategy(object):
 
     def clean_partial_pipeline(self, token):
         self.storage.partial.destroy(token)
+        self.session_pop(PARTIAL_TOKEN_SESSION_NAME)
 
     def openid_store(self):
         return OpenIdStore(self)
@@ -126,11 +127,11 @@ class BaseStrategy(object):
         """Return current language"""
         return ''
 
-    def send_email_validation(self, backend, email):
+    def send_email_validation(self, backend, email, partial_token=None):
         email_validation = self.setting('EMAIL_VALIDATION_FUNCTION')
         send_email = module_member(email_validation)
         code = self.storage.code.make_code(email)
-        send_email(self, backend, code)
+        send_email(self, backend, code, partial_token)
         return code
 
     def validate_email(self, email, code):
@@ -138,6 +139,8 @@ class BaseStrategy(object):
         if not verification_code or verification_code.code != code:
             return False
         elif verification_code.email != email:
+            return False
+        elif verification_code.verified:
             return False
         else:
             verification_code.verify()

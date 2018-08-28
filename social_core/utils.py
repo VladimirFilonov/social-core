@@ -16,10 +16,13 @@ from six.moves.urllib_parse import urlparse, urlunparse, urlencode, \
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 
-from .exceptions import AuthCanceled, AuthUnreachableProvider
+from .exceptions import AuthCanceled, AuthForbidden, AuthUnreachableProvider
 
 
 SETTING_PREFIX = 'SOCIAL_AUTH'
+
+PARTIAL_TOKEN_SESSION_NAME = 'partial_pipeline_token'
+
 
 social_logger = logging.getLogger('social')
 
@@ -90,15 +93,19 @@ def sanitize_redirect(hosts, redirect_to):
     and returns it, else returns None, similar as how's it done
     on django.contrib.auth.views.
     """
-    if redirect_to:
-        try:
-            # Don't redirect to a host that's not in the list
-            netloc = urlparse(redirect_to)[1] or hosts[0]
-        except (TypeError, AttributeError):
-            pass
-        else:
-            if netloc in hosts:
-                return redirect_to
+    # Avoid redirect on evil URLs like ///evil.com
+    if not redirect_to or not hasattr(redirect_to, 'startswith') or \
+       redirect_to.startswith('///'):
+        return None
+
+    try:
+        # Don't redirect to a host that's not in the list
+        netloc = urlparse(redirect_to)[1] or hosts[0]
+    except (TypeError, AttributeError):
+        pass
+    else:
+        if netloc in hosts:
+            return redirect_to
 
 
 def user_is_authenticated(user):
@@ -135,8 +142,8 @@ def slugify(value):
     value = unicodedata.normalize('NFKD', six.text_type(value)) \
                        .encode('ascii', 'ignore') \
                        .decode('ascii')
-    value = re.sub('[^\w\s-]', '', value).strip().lower()
-    return re.sub('[-\s]+', '-', value)
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    return re.sub(r'[-\s]+', '-', value)
 
 
 def first(func, items):
@@ -171,7 +178,7 @@ def partial_pipeline_data(backend, user=None, partial_token=None,
                                             'partial_token')
     partial_token = partial_token or \
         request_data.get(partial_argument_name) or \
-        backend.strategy.session_get('partial_pipeline_token', None)
+        backend.strategy.session_get(PARTIAL_TOKEN_SESSION_NAME, None)
 
     if partial_token:
         partial = backend.strategy.partial_load(partial_token)
@@ -255,6 +262,8 @@ def handle_http_errors(func):
         except requests.HTTPError as err:
             if err.response.status_code == 400:
                 raise AuthCanceled(args[0], response=err.response)
+            elif err.response.status_code == 401:
+                raise AuthForbidden(args[0])
             elif err.response.status_code == 503:
                 raise AuthUnreachableProvider(args[0])
             else:

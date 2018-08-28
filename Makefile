@@ -1,4 +1,4 @@
-PYTHON_VERSIONS := 2.7.12 3.3.6 3.4.4 3.5.2 pypy-4.0.1
+PYTHON_VERSIONS := 2.7.12 3.4.4 3.5.2 pypy-4.0.1
 
 build:
 	@ BUILD_VERSION=2 python setup.py sdist
@@ -42,6 +42,12 @@ docker-tox: docker-tox-build
 		     --name psa-social-core-test \
 		     -v "`pwd`:/code" \
 		     -w /code omab/psa-social-core tox
+
+docker-bash: docker-tox-build
+	@ docker run -it --rm \
+		     --name psa-social-core-test \
+		     -v "`pwd`:/code" \
+		     -w /code omab/psa-social-core bash
 
 tests: setup-pyenv run-tox clean
 
